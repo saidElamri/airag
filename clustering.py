@@ -43,7 +43,7 @@ def update_clusters_in_db(batch_size=10, n_clusters=3):
     Fetches queries from the DB, clusters them, and saves labels back.
     Also tracks the process in MLflow.
     """
-    mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
+    mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "postgresql://aiuser:aipassword@localhost:5432/airag_db"))
     mlflow.set_experiment("IT_Support_RAG_Analysis")
     
     db: Session = SessionLocal()

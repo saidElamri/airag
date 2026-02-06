@@ -29,3 +29,6 @@ mlruns/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Binaries
+minikube

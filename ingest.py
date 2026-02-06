@@ -37,11 +37,23 @@ def main():
     print(f"Created {len(splits)} chunks.")
 
     # 4. Generate Embeddings & Store in ChromaDB
-    print("Generating embeddings and creating vector store...")
-    # Using HuggingFace (sentence-transformers)
     from langchain_huggingface import HuggingFaceEmbeddings
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     
+    # Check if DB already exists and has content
+    if os.path.exists(DB_DIR):
+        print(f"Vector store already exists at {DB_DIR}. Checking content...")
+        vectorstore = Chroma(
+            persist_directory=DB_DIR,
+            embedding_function=embeddings
+        )
+        count = vectorstore._collection.count()
+        if count > 0:
+            print(f"Vector store already contains {count} documents. Skipping ingestion.")
+            return
+        print("Vector store is empty. Proceeding with ingestion.")
+
+    print("Generating embeddings and creating vector store...")
     vectorstore = Chroma.from_documents(
         documents=splits,
         embedding=embeddings,
