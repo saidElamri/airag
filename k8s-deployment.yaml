@@ -55,7 +55,7 @@ spec:
     spec:
       containers:
       - name: rag-backend
-        image: rag-backend:latest
+        image: airag-backend:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 8000
@@ -73,7 +73,19 @@ spec:
               name: rag-secrets
               key: groq-api-key
         - name: MLFLOW_TRACKING_URI
-          value: "sqlite:///app/mlflow.db" # In prod, this would likely be a remote central server
+          value: "postgresql://aiuser:aipassword@db:5432/airag_db"
+        volumeMounts:
+        - name: pdf-data
+          mountPath: /app/pdf_data
+        - name: chroma-db
+          mountPath: /app/chroma_db
+      volumes:
+      - name: pdf-data
+        hostPath:
+          path: /home/dicksons/projects/airag/pdf_data
+      - name: chroma-db
+        hostPath:
+          path: /home/dicksons/projects/airag/chroma_db
 ---
 apiVersion: v1
 kind: Service

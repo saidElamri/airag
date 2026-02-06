@@ -5,7 +5,7 @@ python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
 # Core RAG deps - letting pip resolve versions
-langchain
+langchain<1.0.0
 langchain-community
 langchain-chroma
 langchain-google-genai

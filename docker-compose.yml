@@ -27,11 +27,10 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - EMBEDDING_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
       - CHROMA_DB_DIR=/app/chroma_db
-      - MLFLOW_TRACKING_URI=sqlite:////app/mlflow.db
+      - MLFLOW_TRACKING_URI=postgresql://aiuser:aipassword@db:5432/airag_db
     volumes:
       - ./chroma_db:/app/chroma_db
       - ./pdf_data:/app/pdf_data
-      - ./mlflow.db:/app/mlflow.db
 
 volumes:
   postgres_data:
