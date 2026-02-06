@@ -1,0 +1,26 @@
+fastapi
+uvicorn
+sqlalchemy
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+# Core RAG deps - letting pip resolve versions
+langchain
+langchain-community
+langchain-chroma
+langchain-google-genai
+langchain-text-splitters
+chromadb
+fastembed
+pypdf
+python-dotenv
+mlflow
+psycopg2-binary
+langchain-groq
+pytest
+pytest-mock
+sentence-transformers
+langchain-huggingface
+numpy
+scikit-learn
+

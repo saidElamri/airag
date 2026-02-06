@@ -1,0 +1,31 @@
+# Exclude virtual environments
+venv/
+.venv/
+env/
+
+# Exclude git
+.git/
+.gitignore
+
+# Exclude python cache
+**/__pycache__/
+*.py[cod]
+
+# Exclude local data and database files
+mlflow.db
+mlruns/
+chroma_db/
+pdf_data/
+sql_app.db
+server.log
+
+# Exclude configuration and testing
+.env
+tests/
+Dockerfile
+docker-compose.yml
+k8s-deployment.yaml
+README.md
+implementation_plan.md
+walkthrough.md
+task.md

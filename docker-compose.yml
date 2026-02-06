@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: airag_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: aiuser
+      POSTGRES_PASSWORD: aipassword
+      POSTGRES_DB: airag_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: airag_backend
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://aiuser:aipassword@db:5432/airag_db
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - EMBEDDING_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
+      - CHROMA_DB_DIR=/app/chroma_db
+      - MLFLOW_TRACKING_URI=sqlite:////app/mlflow.db
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./pdf_data:/app/pdf_data
+      - ./mlflow.db:/app/mlflow.db
+
+volumes:
+  postgres_data:

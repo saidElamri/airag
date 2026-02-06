@@ -1,0 +1,31 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python cache
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Local config and secrets
+.env
+.env.local
+.env.*.local
+.python-version
+
+# Database and data
+chroma_db/
+pdf_data/
+sql_app.db
+mlflow.db
+mlruns/
+*.log
+
+# IDE specific
+.vscode/
+.idea/
+
+# OS specific
+.DS_Store
+Thumbs.db
