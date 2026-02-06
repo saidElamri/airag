@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
-import models, auth, database, rag
+import models, auth, database, rag, clustering
 from database import get_db
 import time
 import mlflow
@@ -166,3 +166,16 @@ async def get_history(current_user: str = Depends(auth.get_current_user), db: Se
     
     queries = db.query(models.Query).filter(models.Query.userid == user.id).order_by(models.Query.created_at.desc()).all()
     return queries
+
+@app.post("/analytics/cluster")
+async def run_clustering(n_clusters: int = 3, current_user: str = Depends(auth.get_current_user)):
+    """
+    Triggers the KMeans clustering process on all queries in the database.
+    This groups questions into topics for supervision and analysis.
+    """
+    # Simply call the utility function from clustering.py
+    try:
+        clustering.update_clusters_in_db(n_clusters=n_clusters)
+        return {"message": f"Clustering completed successfully with {n_clusters} clusters.", "status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Clustering failed: {str(e)}")
