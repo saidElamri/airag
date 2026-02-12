@@ -122,19 +122,28 @@ async def query_rag(question: str, current_user: str = Depends(auth.get_current_
             # Log chunks and full prompt
             if "source_documents" in result:
                 chunks_info = [
-                    {"page": doc.metadata.get("page", "N/A"), "content": doc.page_content[:200]}
+                    {
+                        "page": doc.metadata.get("page", "N/A"), 
+                        "section": doc.metadata.get("section", "N/A"),
+                        "content": doc.page_content[:200]
+                    }
                     for doc in result["source_documents"]
                 ]
                 mlflow.log_dict({"chunks": chunks_info}, "chunks.json")
                 
-                # Reconstruct and log full prompt for observability
+                # Reconstruct and log full prompt for observability (Synced with rag.py)
                 context_text = "\n\n".join([doc.page_content for doc in result["source_documents"]])
-                full_prompt = f"""Vous êtes un expert en support informatique. Utilisez les extraits de contexte suivants pour répondre à la question. 
-Si vous ne connaissez pas la réponse, dites simplement que vous ne savez pas, n'essayez pas d'inventer une réponse.
-
-Context: {context_text}
-Question: {question}
-Answer:"""
+                full_prompt = f"""Vous êtes un expert en support informatique de haut niveau. Votre mission est de fournir des réponses standardisées, professionnelles et précises.
+    
+    CONSIGNES DE STANDARDISATION :
+    1. Commencez par une brève salutation professionnelle.
+    2. Structurez votre réponse avec des étapes claires (1, 2, 3...) si nécessaire.
+    3. Citez vos sources si elles sont disponibles.
+    4. Si la réponse n'est pas dans le contexte, dites : "Désolé, je ne dispose pas de l'information nécessaire dans la documentation actuelle pour répondre à cette demande."
+    
+    Context: {context_text}
+    Question: {question}
+    Answer:"""
                 mlflow.log_text(full_prompt, "full_prompt.txt")
                 
             # Log LLM Info
@@ -156,7 +165,22 @@ Answer:"""
         db.add(db_query)
         db.commit()
     
-    return {"question": question, "answer": answer, "latency_ms": latency}
+    # Prepare source info
+    sources = []
+    if "source_documents" in result:
+        for doc in result["source_documents"]:
+            sources.append({
+                "page": doc.metadata.get("page", "N/A"),
+                "section": doc.metadata.get("section", "N/A"),
+                "content_preview": doc.page_content[:150]
+            })
+    
+    return {
+        "question": question, 
+        "answer": answer, 
+        "latency_ms": latency,
+        "sources": sources
+    }
 
 @app.get("/history")
 async def get_history(current_user: str = Depends(auth.get_current_user), db: Session = Depends(get_db)):

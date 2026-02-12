@@ -69,9 +69,14 @@ def get_rag_chain():
     from langchain.chains import RetrievalQA
     from langchain_google_genai import ChatGoogleGenerativeAI
 
-    template = """Vous êtes un expert en support informatique. Utilisez les extraits de contexte suivants pour répondre à la question. 
-    Si vous ne connaissez pas la réponse, dites simplement que vous ne savez pas, n'essayez pas d'inventer une réponse.
-
+    template = """Vous êtes un expert en support informatique de haut niveau. Votre mission est de fournir des réponses standardisées, professionnelles et précises.
+    
+    CONSIGNES DE STANDARDISATION :
+    1. Commencez par une brève salutation professionnelle.
+    2. Structurez votre réponse avec des étapes claires (1, 2, 3...) si nécessaire.
+    3. Citez vos sources si elles sont disponibles.
+    4. Si la réponse n'est pas dans le contexte, dites : "Désolé, je ne dispose pas de l'information nécessaire dans la documentation actuelle pour répondre à cette demande."
+    
     Context: {context}
     Question: {question}
     Answer:"""

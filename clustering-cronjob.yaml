@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: clustering-job
+spec:
+  schedule: "0 0 * * 0" # Every Sunday at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: clustering-trigger
+            image: postgres:15-alpine
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # This script triggers the clustering API endpoint.
+              # Uses wget (available in alpine) instead of curl.
+              
+              wget --post-data="" \
+                --header="accept: application/json" \
+                --header="Authorization: Bearer YOUR_SERVICE_TOKEN" \
+                -qO- "http://rag-backend-service:80/analytics/cluster?n_clusters=5" \
+                && echo "Clustering triggered successfully" \
+                || echo "Clustering trigger failed"
+          restartPolicy: OnFailure
