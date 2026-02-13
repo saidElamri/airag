@@ -2,9 +2,7 @@ import os
 import sys
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
-
 from langchain_core.prompts import PromptTemplate
-
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_community.llms import FakeListLLM
@@ -13,6 +11,18 @@ from langchain_community.llms import FakeListLLM
 load_dotenv()
 
 DB_DIR = "./chroma_db"
+
+RAG_PROMPT_TEMPLATE = """Vous êtes un expert en support informatique de haut niveau. Votre mission est de fournir des réponses standardisées, professionnelles et précises.
+
+CONSIGNES DE STANDARDISATION :
+1. Commencez par une brève salutation professionnelle.
+2. Structurez votre réponse avec des étapes claires (1, 2, 3...) si nécessaire.
+3. Citez vos sources si elles sont disponibles.
+4. Si la réponse n'est pas dans le contexte, dites : "Désolé, je ne dispose pas de l'information nécessaire dans la documentation actuelle pour répondre à cette demande."
+
+Context: {context}
+Question: {question}
+Answer:"""
 
 def get_vectorstore():
     if not os.path.exists(DB_DIR):
@@ -67,20 +77,8 @@ def get_rag_chain():
 
     # LCEL Implementation
     from langchain.chains import RetrievalQA
-    from langchain_google_genai import ChatGoogleGenerativeAI
 
-    template = """Vous êtes un expert en support informatique de haut niveau. Votre mission est de fournir des réponses standardisées, professionnelles et précises.
-    
-    CONSIGNES DE STANDARDISATION :
-    1. Commencez par une brève salutation professionnelle.
-    2. Structurez votre réponse avec des étapes claires (1, 2, 3...) si nécessaire.
-    3. Citez vos sources si elles sont disponibles.
-    4. Si la réponse n'est pas dans le contexte, dites : "Désolé, je ne dispose pas de l'information nécessaire dans la documentation actuelle pour répondre à cette demande."
-    
-    Context: {context}
-    Question: {question}
-    Answer:"""
-    prompt = PromptTemplate.from_template(template)
+    prompt = PromptTemplate.from_template(RAG_PROMPT_TEMPLATE)
 
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
@@ -90,7 +88,7 @@ def get_rag_chain():
         chain_type_kwargs={"prompt": prompt}
     )
     
-    return qa_chain # Changed from rag_chain
+    return qa_chain
 
 def main():
     if len(sys.argv) > 1:

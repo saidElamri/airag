@@ -12,6 +12,12 @@ spec:
           - name: clustering-trigger
             image: postgres:15-alpine
             imagePullPolicy: IfNotPresent
+            env:
+            - name: SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: SECRET_KEY # Reusing SECRET_KEY as the token for now
             command:
             - /bin/sh
             - -c
@@ -21,7 +27,7 @@ spec:
               
               wget --post-data="" \
                 --header="accept: application/json" \
-                --header="Authorization: Bearer YOUR_SERVICE_TOKEN" \
+                --header="Authorization: Bearer $SERVICE_TOKEN" \
                 -qO- "http://rag-backend-service:80/analytics/cluster?n_clusters=5" \
                 && echo "Clustering triggered successfully" \
                 || echo "Clustering trigger failed"

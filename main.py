@@ -77,6 +77,12 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 @app.post("/query")
 async def query_rag(question: str, current_user: str = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    # Basic sanitization to prevent prompt injection
+    question = question.strip()[:500]  # Limit length and strip
+    if any(char in question for char in ["{", "}", "[", "]", "\\"]):
+        # Very strict for this POC, but safer
+        question = "".join(c for c in question if c not in ["{", "}", "[", "]", "\\"])
+    
     start_time = time.time()
     
     # Get RAG chain
@@ -131,19 +137,9 @@ async def query_rag(question: str, current_user: str = Depends(auth.get_current_
                 ]
                 mlflow.log_dict({"chunks": chunks_info}, "chunks.json")
                 
-                # Reconstruct and log full prompt for observability (Synced with rag.py)
+                # Reconstruct and log full prompt for observability (Imported from rag.py)
                 context_text = "\n\n".join([doc.page_content for doc in result["source_documents"]])
-                full_prompt = f"""Vous êtes un expert en support informatique de haut niveau. Votre mission est de fournir des réponses standardisées, professionnelles et précises.
-    
-    CONSIGNES DE STANDARDISATION :
-    1. Commencez par une brève salutation professionnelle.
-    2. Structurez votre réponse avec des étapes claires (1, 2, 3...) si nécessaire.
-    3. Citez vos sources si elles sont disponibles.
-    4. Si la réponse n'est pas dans le contexte, dites : "Désolé, je ne dispose pas de l'information nécessaire dans la documentation actuelle pour répondre à cette demande."
-    
-    Context: {context_text}
-    Question: {question}
-    Answer:"""
+                full_prompt = rag.RAG_PROMPT_TEMPLATE.format(context=context_text, question=question)
                 mlflow.log_text(full_prompt, "full_prompt.txt")
                 
             # Log LLM Info
@@ -165,15 +161,15 @@ async def query_rag(question: str, current_user: str = Depends(auth.get_current_
         db.add(db_query)
         db.commit()
     
-    # Prepare source info
-    sources = []
-    if "source_documents" in result:
-        for doc in result["source_documents"]:
-            sources.append({
-                "page": doc.metadata.get("page", "N/A"),
-                "section": doc.metadata.get("section", "N/A"),
-                "content_preview": doc.page_content[:150]
-            })
+    # Prepare source info (Using list comprehension)
+    sources = [
+        {
+            "page": doc.metadata.get("page", "N/A"),
+            "section": doc.metadata.get("section", "N/A"),
+            "content_preview": doc.page_content[:150]
+        }
+        for doc in result.get("source_documents", [])
+    ]
     
     return {
         "question": question, 

@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first for caching
 COPY requirements.txt .
 
-# Force CPU-only installation for torch to avoid massive CUDA downloads
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+# Install CPU-only torch first to avoid massive CUDA downloads
+RUN pip install --no-cache-dir torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
 
