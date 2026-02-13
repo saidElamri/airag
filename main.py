@@ -77,6 +77,12 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 @app.post("/query")
 async def query_rag(question: str, current_user: str = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    # Basic sanitization to prevent prompt injection
+    question = question.strip()[:500]  # Limit length and strip
+    if any(char in question for char in ["{", "}", "[", "]", "\\"]):
+        # Very strict for this POC, but safer
+        question = "".join(c for c in question if c not in ["{", "}", "[", "]", "\\"])
+    
     start_time = time.time()
     
     # Get RAG chain
@@ -122,19 +128,18 @@ async def query_rag(question: str, current_user: str = Depends(auth.get_current_
             # Log chunks and full prompt
             if "source_documents" in result:
                 chunks_info = [
-                    {"page": doc.metadata.get("page", "N/A"), "content": doc.page_content[:200]}
+                    {
+                        "page": doc.metadata.get("page", "N/A"), 
+                        "section": doc.metadata.get("section", "N/A"),
+                        "content": doc.page_content[:200]
+                    }
                     for doc in result["source_documents"]
                 ]
                 mlflow.log_dict({"chunks": chunks_info}, "chunks.json")
                 
-                # Reconstruct and log full prompt for observability
+                # Reconstruct and log full prompt for observability (Imported from rag.py)
                 context_text = "\n\n".join([doc.page_content for doc in result["source_documents"]])
-                full_prompt = f"""Vous êtes un expert en support informatique. Utilisez les extraits de contexte suivants pour répondre à la question. 
-Si vous ne connaissez pas la réponse, dites simplement que vous ne savez pas, n'essayez pas d'inventer une réponse.
-
-Context: {context_text}
-Question: {question}
-Answer:"""
+                full_prompt = rag.RAG_PROMPT_TEMPLATE.format(context=context_text, question=question)
                 mlflow.log_text(full_prompt, "full_prompt.txt")
                 
             # Log LLM Info
@@ -156,7 +161,22 @@ Answer:"""
         db.add(db_query)
         db.commit()
     
-    return {"question": question, "answer": answer, "latency_ms": latency}
+    # Prepare source info (Using list comprehension)
+    sources = [
+        {
+            "page": doc.metadata.get("page", "N/A"),
+            "section": doc.metadata.get("section", "N/A"),
+            "content_preview": doc.page_content[:150]
+        }
+        for doc in result.get("source_documents", [])
+    ]
+    
+    return {
+        "question": question, 
+        "answer": answer, 
+        "latency_ms": latency,
+        "sources": sources
+    }
 
 @app.get("/history")
 async def get_history(current_user: str = Depends(auth.get_current_user), db: Session = Depends(get_db)):

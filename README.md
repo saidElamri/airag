@@ -91,7 +91,7 @@ The system features an **idempotent ingestion** script (`ingest.py`) that only p
 Every query logs rich metadata to MLflow:
 - **Metrics**: Latency (`latency_ms`), Similarity Score.
 - **Parameters**: Prompt template, LLM model used.
-- **Artifacts**: Chunks retrieved from the context.
+- **Artifacts**: Chunks retrieved with **page/section metadata** and the full **standardized prompt**.
 - **Registry**: The entire RAG pipeline is registered in the MLflow Model Registry.
 
 Access the MLflow UI:
@@ -103,6 +103,7 @@ minikube service mlflow-service
 Identify frequent IT issues by grouping user questions into topics.
 - **Endpoint**: `POST /analytics/cluster`
 - **Algorithm**: KMeans clustering on user question embeddings.
+- **Automation**: Managed via `clustering-cronjob.yaml` for weekly automated analysis in Kubernetes.
 - **Result**: Labels stored in PostgreSQL for visualization.
 
 ---
@@ -119,7 +120,9 @@ Once running, explore the interactive documentation via Swagger UI:
 ---
 
 ##  Industrialization Features
+- **Standardized IT Support**: Prompt engineering ensures answers follow professional IT protocols (salutations, steps, sources).
+- **Embedded Metadata**: Automatic extraction and transmission of `page` and `section` metadata for traceability.
 - **Speed-Optimized CI/CD**: GitHub Actions utilizes `GHA type caching` and `buildx` for near-instant builds.
 - **Persistence**: PostgreSQL backend ensures user history and analytics are preserved.
-- **Scalability**: Kubernetes deployment with health checks and volume management.
+- **Scalability**: Kubernetes deployment with health checks, volume management, and **automated CronJobs**.
 - **Security**: Mandatory JWT authentication for all operational endpoints.
